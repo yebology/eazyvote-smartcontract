@@ -16,12 +16,26 @@ contract EazyVoteUnitTest is Test {
         eazyVote = eazyVoteDeploy.run();
     }
 
-    function testNewElectionHasBeenAdded() public {
+    function testSuccessfullyCreateNewElection() public {
         uint256 eazyVoteElectionTotalBefore = eazyVote.getElections().length;
         eazyVote.createNewElection(1, 2);
         uint256 eazyVoteElectionTotalAfter = eazyVote.getElections().length;
         assertEq(eazyVoteElectionTotalBefore, 0);
         assertEq(eazyVoteElectionTotalAfter, 1);
+    }
+
+    function testSuccessfullyAddNewCandidate() public {
+        uint256 eazyVoteTotalCandidateBefore = eazyVote.getCandidates().length;
+        eazyVote.addNewCandidate(
+            0,
+            "Yobel",
+            "Yobel.jpg", 
+            "Ora et Labora", 
+            "Lorem Ipsum Dolor Sit Amet"
+        );
+        uint256 eazyVoteTotalCandidateAfter = eazyVote.getCandidates().length;
+        assertEq(eazyVoteTotalCandidateBefore, 0);
+        assertEq(eazyVoteTotalCandidateAfter, 1);
     }
     //
 }
