@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.23;
 
 contract EazyVote {
@@ -10,58 +11,56 @@ contract EazyVote {
 
     struct Candidate {
         uint256 id;
-        address[] voter;
+        uint256 totalVote;
         string candidateName;
         string candidatePhoto;
         string candidateVision;
         string candidateMission;
     }
-
     struct Election {
         uint256 id;
         uint256 electionStart;
         uint256 electionEnd;
-        Candidate[] candidates;
         Status electionStatus;
     }
 
-    uint256 private totalElection;
+    mapping(uint256 electionId => uint256[] candidateId) electionCandidate;
+    mapping(uint256 electionId => address[] voter) electionVoter;
+
     Election[] private elections;
+    Candidate[] private candidates;
 
     error ElectionIsNotOpen(uint256 electionId);
     error VoterAlreadyVote(address voter, uint256 electionId);
 
-    event newElectionHasBeenCreated(uint256 indexed electionId);
+    event newElectionHasBeenCreated(
+        uint256 indexed electionId
+    );
     event newCandidateHasBeenAdded(
         uint256 indexed electionId,
         uint256 indexed candidateId
     );
     event newVoteHasBeenAdded(
         address indexed voter,
-        uint256 electionId,
+        uint256 indexed electionId,
         uint256 indexed candidateId
     );
-    event electionHasChangedStatus(uint256 electionId, Status electionStatus);
+    event electionHasChangedStatus(
+        uint256 indexed electionId, 
+        Status electionStatus
+    );
 
     modifier onlyVoteOneTimeInOneElection(address voter, uint256 electionId) {
-        Election memory election = elections[electionId];
-        Candidate[] memory candidates = election.candidates;
-        for (uint256 i = 0; i < candidates.length; i++) {
-            if (candidates[i].voter.length >= 1) {
-                for (uint256 j = 0; j < candidates[i].voter.length; j++) {
-                    address candidateVoter = candidates[i].voter[j];
-                    if (candidateVoter == voter) {
-                        revert VoterAlreadyVote(voter, electionId);
-                    }
-                }
+        for (uint256 i = 0; i < electionVoter[electionId].length; i++) {
+            if (electionVoter[electionId][i] == voter) {
+                revert VoterAlreadyVote(voter, electionId);
             }
         }
         _;
     }
 
     modifier electionMustStillOpen(uint256 electionId) {
-        Election memory election = elections[electionId];
-        if (election.electionStatus == Status.CLOSED) {
+        if (elections[electionId].electionStatus == Status.CLOSED) {
             revert ElectionIsNotOpen(electionId);
         }
         _;
@@ -71,14 +70,17 @@ contract EazyVote {
         uint256 electionStart,
         uint256 electionEnd
     ) external {
-        Election memory newElection;
-        newElection.id = elections.length;
-        newElection.electionStart = electionStart;
-        newElection.electionEnd = electionEnd;
-        newElection.electionStatus = Status.CLOSED;
-        elections.push(newElection);
-        totalElection += 1;
-        emit newElectionHasBeenCreated(newElection.id);
+        elections.push(
+            Election({
+                id: elections.length,
+                electionStart: electionStart,
+                electionEnd: electionEnd,
+                electionStatus: Status.CLOSED
+            })
+        );
+        emit newElectionHasBeenCreated(
+            elections.length - 1
+        );
     }
 
     function changeElectionStatus(
@@ -109,16 +111,20 @@ contract EazyVote {
         string memory candidateVision,
         string memory candidateMission
     ) external {
-        Candidate memory newCandidate;
-        newCandidate.id = elections[electionId].candidates.length;
-        newCandidate.candidateName = candidateName;
-        newCandidate.candidatePhoto = candidatePhoto;
-        newCandidate.candidateVision = candidateVision;
-        newCandidate.candidateMission = candidateMission;
-        elections[electionId].candidates.push(newCandidate);
+        candidates.push(
+            Candidate({
+                id: candidates.length,
+                totalVote: 0,
+                candidateName: candidateName,
+                candidatePhoto: candidatePhoto,
+                candidateVision: candidateVision,
+                candidateMission: candidateMission
+            })
+        );
+        electionCandidate[electionId].push(candidates.length - 1);
         emit newCandidateHasBeenAdded(
-            electionId,
-            elections[electionId].candidates.length
+            electionId, 
+            candidates.length - 1
         );
     }
 
@@ -131,12 +137,21 @@ contract EazyVote {
         electionMustStillOpen(electionId)
         onlyVoteOneTimeInOneElection(voter, electionId)
     {
-        elections[electionId].candidates[candidateId].voter.push(voter);
-        emit newVoteHasBeenAdded(voter, electionId, candidateId);
+        electionVoter[electionId].push(voter);
+        candidates[candidateId].totalVote += 1;
+        emit newVoteHasBeenAdded(
+            voter, 
+            electionId, 
+            candidateId
+        );
     }
 
     function getElections() external view returns (Election[] memory) {
         return elections;
+    }
+
+    function getCandidates() external view returns (Candidate[] memory) {
+        return candidates;
     }
     //
 }
