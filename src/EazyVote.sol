@@ -25,7 +25,6 @@ contract EazyVote {
         Status electionStatus;
     }
 
-    address private owner;
     uint256 private totalElection;
     Election[] private elections;
 
@@ -33,8 +32,16 @@ contract EazyVote {
     error VoterAlreadyVote(address voter, uint256 electionId);
 
     event newElectionHasBeenCreated(uint256 indexed electionId);
-    event newCandidateHasBeenAdded(uint256 indexed electionId, uint256 indexed candidateId);
-    event voterHasBeenVoted(address indexed voter, uint256 electionId, uint256 indexed candidateId);
+    event newCandidateHasBeenAdded(
+        uint256 indexed electionId,
+        uint256 indexed candidateId
+    );
+    event newVoteHasBeenAdded(
+        address indexed voter,
+        uint256 electionId,
+        uint256 indexed candidateId
+    );
+    event electionHasChangedStatus(uint256 electionId, Status electionStatus);
 
     modifier onlyVoteOneTimeInOneElection(address voter, uint256 electionId) {
         Election memory election = elections[electionId];
@@ -60,10 +67,6 @@ contract EazyVote {
         _;
     }
 
-    constructor() {
-        owner = msg.sender;
-    }
-
     function createNewElection(
         uint256 electionStart,
         uint256 electionEnd
@@ -75,13 +78,29 @@ contract EazyVote {
         newElection.electionStatus = Status.CLOSED;
         elections.push(newElection);
         totalElection += 1;
+        emit newElectionHasBeenCreated(newElection.id);
     }
 
     function changeElectionStatus(
         uint256 electionId,
-        uint256 electionStart,
-        uint256 electionEnd
-    ) public {}
+        string memory message
+    ) external {
+        if (
+            keccak256(abi.encodePacked(message)) ==
+            keccak256(abi.encodePacked("OPEN"))
+        ) {
+            elections[electionId].electionStatus = Status.OPEN;
+        } else if (
+            keccak256((abi.encodePacked(message))) ==
+            keccak256(abi.encodePacked("CLOSED"))
+        ) {
+            elections[electionId].electionStatus = Status.CLOSED;
+        }
+        emit electionHasChangedStatus(
+            electionId,
+            elections[electionId].electionStatus
+        );
+    }
 
     function addNewCandidate(
         uint256 electionId,
@@ -91,14 +110,30 @@ contract EazyVote {
         string memory candidateMission
     ) external {
         Candidate memory newCandidate;
+        newCandidate.id = elections[electionId].candidates.length;
         newCandidate.candidateName = candidateName;
         newCandidate.candidatePhoto = candidatePhoto;
         newCandidate.candidateVision = candidateVision;
         newCandidate.candidateMission = candidateMission;
         elections[electionId].candidates.push(newCandidate);
+        emit newCandidateHasBeenAdded(
+            electionId,
+            elections[electionId].candidates.length
+        );
     }
 
-    function voteCandidate(uint256 electionId, uint256 candidateId) public {}
+    function voteCandidate(
+        address voter,
+        uint256 electionId,
+        uint256 candidateId
+    )
+        external
+        electionMustStillOpen(electionId)
+        onlyVoteOneTimeInOneElection(voter, electionId)
+    {
+        elections[electionId].candidates[candidateId].voter.push(voter);
+        emit newVoteHasBeenAdded(voter, electionId, candidateId);
+    }
 
     function getElections() external view returns (Election[] memory) {
         return elections;
