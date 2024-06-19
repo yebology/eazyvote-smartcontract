@@ -153,5 +153,16 @@ contract EazyVote {
     function getCandidates() external view returns (Candidate[] memory) {
         return candidates;
     }
+
+    function getCandidatesInOneElection(
+        uint256 electionId
+    ) external view returns (Candidate[] memory) {
+        uint256[] memory candidateIds = electionCandidate[electionId];
+        Candidate[] memory candidatesInOneElection = new Candidate[](candidateIds.length);
+        for (uint256 i = 0; i < candidateIds.length; i++) {
+            candidatesInOneElection[i] = candidates[candidateIds[i]];
+        }
+        return candidatesInOneElection;
+    }
     //
 }
