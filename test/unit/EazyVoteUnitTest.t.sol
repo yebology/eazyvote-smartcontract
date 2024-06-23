@@ -63,7 +63,13 @@ contract EazyVoteUnitTest is Test {
     {
         eazyVote.changeElectionStatus(0, "OPEN");
         eazyVote.voteCandidate(msg.sender, 0, 0);
-        vm.expectRevert(abi.encodeWithSelector(EazyVote.VoterAlreadyVote.selector, msg.sender, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                EazyVote.VoterAlreadyVote.selector,
+                msg.sender,
+                0
+            )
+        );
         eazyVote.voteCandidate(msg.sender, 0, 1);
     }
 
@@ -136,7 +142,9 @@ contract EazyVoteUnitTest is Test {
         createNewElection
         addNewCandidate(0, "PEPE")
     {
-        vm.expectRevert(abi.encodeWithSelector(EazyVote.ElectionIsNotOpen.selector, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(EazyVote.ElectionIsNotOpen.selector, 0)
+        );
         eazyVote.voteCandidate(msg.sender, 0, 0);
     }
 
@@ -158,6 +166,13 @@ contract EazyVoteUnitTest is Test {
             uint256(expectedElectionStatusAfterChangeStatus),
             uint256(actualElectionStatusAfterChangeStatus)
         );
+    }
+
+    function testSuccessfullyGiveFeedback() public {
+        uint256 expectedFeedbacksCount = 1;
+        eazyVote.giveFeedback(msg.sender, "Lorem ipsum dolor sit amet");
+        uint256 actualFeedbacksCount = eazyVote.getFeedbacks().length;
+        assertEq(expectedFeedbacksCount, actualFeedbacksCount);
     }
     //
 }

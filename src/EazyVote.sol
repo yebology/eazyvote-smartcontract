@@ -23,19 +23,23 @@ contract EazyVote {
         uint256 electionEnd;
         Status electionStatus;
     }
+    struct Feedback {
+        uint256 id;
+        address user;
+        string textFeedback;
+    }
 
     mapping(uint256 electionId => uint256[] candidateId) electionCandidate;
     mapping(uint256 electionId => address[] voter) electionVoter;
 
     Election[] private elections;
     Candidate[] private candidates;
+    Feedback[] private feedbacks;
 
     error ElectionIsNotOpen(uint256 electionId);
     error VoterAlreadyVote(address voter, uint256 electionId);
 
-    event newElectionHasBeenCreated(
-        uint256 indexed electionId
-    );
+    event newElectionHasBeenCreated(uint256 indexed electionId);
     event newCandidateHasBeenAdded(
         uint256 indexed electionId,
         uint256 indexed candidateId
@@ -46,7 +50,7 @@ contract EazyVote {
         uint256 indexed candidateId
     );
     event electionHasChangedStatus(
-        uint256 indexed electionId, 
+        uint256 indexed electionId,
         Status electionStatus
     );
 
@@ -78,9 +82,7 @@ contract EazyVote {
                 electionStatus: Status.CLOSED
             })
         );
-        emit newElectionHasBeenCreated(
-            elections.length - 1
-        );
+        emit newElectionHasBeenCreated(elections.length - 1);
     }
 
     function changeElectionStatus(
@@ -122,10 +124,7 @@ contract EazyVote {
             })
         );
         electionCandidate[electionId].push(candidates.length - 1);
-        emit newCandidateHasBeenAdded(
-            electionId, 
-            candidates.length - 1
-        );
+        emit newCandidateHasBeenAdded(electionId, candidates.length - 1);
     }
 
     function voteCandidate(
@@ -139,10 +138,21 @@ contract EazyVote {
     {
         electionVoter[electionId].push(voter);
         candidates[candidateId].totalVote += 1;
-        emit newVoteHasBeenAdded(
-            voter, 
-            electionId, 
-            candidateId
+        emit newVoteHasBeenAdded(voter, electionId, candidateId);
+    }
+
+    function giveFeedback(
+        address user, 
+        string memory textFeedback
+    ) 
+        external 
+    {
+        feedbacks.push(
+            Feedback({
+                id: feedbacks.length,
+                user: user,
+                textFeedback: textFeedback
+            })
         );
     }
 
@@ -152,6 +162,10 @@ contract EazyVote {
 
     function getCandidates() external view returns (Candidate[] memory) {
         return candidates;
+    }
+
+    function getFeedbacks() external view returns (Feedback[] memory) {
+        return feedbacks;
     }
 
     function getCandidatesIdInOneElection(
