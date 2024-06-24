@@ -21,6 +21,7 @@ contract EazyVote {
         uint256 id;
         string electionTitle;
         string electionPicture;
+        address electionCreator;
         uint256 electionStart;
         uint256 electionEnd;
         string electionDescription;
@@ -77,6 +78,7 @@ contract EazyVote {
     function createNewElection(
         string memory electionTitle,
         string memory electionPicture,
+        address electionCreator,
         uint256 electionStart,
         uint256 electionEnd,
         string memory electionDescription
@@ -86,6 +88,7 @@ contract EazyVote {
                 id: elections.length,
                 electionTitle: electionTitle,
                 electionPicture: electionPicture,
+                electionCreator: electionCreator,
                 electionStart: electionStart,
                 electionEnd: electionEnd,
                 electionDescription: electionDescription,
