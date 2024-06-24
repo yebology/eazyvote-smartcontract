@@ -39,7 +39,9 @@ contract EazyVote {
     error ElectionIsNotOpen(uint256 electionId);
     error VoterAlreadyVote(address voter, uint256 electionId);
 
-    event newElectionHasBeenCreated(uint256 indexed electionId);
+    event newElectionHasBeenCreated(
+        uint256 indexed electionId
+    );
     event newCandidateHasBeenAdded(
         uint256 indexed electionId,
         uint256 indexed candidateId
@@ -55,7 +57,8 @@ contract EazyVote {
     );
 
     modifier onlyVoteOneTimeInOneElection(address voter, uint256 electionId) {
-        for (uint256 i = 0; i < electionVoter[electionId].length; i++) {
+        uint256 length = electionVoter[electionId].length;
+        for (uint256 i = 0; i < length; i++) {
             if (electionVoter[electionId][i] == voter) {
                 revert VoterAlreadyVote(voter, electionId);
             }
@@ -124,7 +127,10 @@ contract EazyVote {
             })
         );
         electionCandidate[electionId].push(candidates.length - 1);
-        emit newCandidateHasBeenAdded(electionId, candidates.length - 1);
+        emit newCandidateHasBeenAdded(
+            electionId, 
+            candidates.length - 1
+        );
     }
 
     function voteCandidate(
@@ -138,7 +144,11 @@ contract EazyVote {
     {
         electionVoter[electionId].push(voter);
         candidates[candidateId].totalVote += 1;
-        emit newVoteHasBeenAdded(voter, electionId, candidateId);
+        emit newVoteHasBeenAdded(
+            voter, 
+            electionId, 
+            candidateId
+        );
     }
 
     function giveFeedback(
