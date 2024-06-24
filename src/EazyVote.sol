@@ -19,8 +19,11 @@ contract EazyVote {
     }
     struct Election {
         uint256 id;
+        string electionTitle;
+        string electionPicture;
         uint256 electionStart;
         uint256 electionEnd;
+        string electionDescription;
         Status electionStatus;
     }
     struct Feedback {
@@ -74,14 +77,20 @@ contract EazyVote {
     }
 
     function createNewElection(
+        string memory electionTitle,
+        string memory electionPicture,
         uint256 electionStart,
-        uint256 electionEnd
+        uint256 electionEnd,
+        string memory electionDescription
     ) external {
         elections.push(
             Election({
                 id: elections.length,
+                electionTitle: electionTitle,
+                electionPicture: electionPicture,
                 electionStart: electionStart,
                 electionEnd: electionEnd,
+                electionDescription: electionDescription,
                 electionStatus: Status.CLOSED
             })
         );

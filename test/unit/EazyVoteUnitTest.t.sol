@@ -12,8 +12,8 @@ contract EazyVoteUnitTest is Test {
     EazyVote eazyVote;
 
     modifier createNewElection() {
-        eazyVote.createNewElection(1, 4);
-        eazyVote.createNewElection(2, 5);
+        eazyVote.createNewElection("Coin Selection", "coin.jpg", 1, 4, "Lorem ipsum dolor sit amet");
+        eazyVote.createNewElection("Organization Voting", "organization.jpg", 2, 5, "Lorem ipsum dolor sit amet");
         _;
     }
 
@@ -35,7 +35,7 @@ contract EazyVoteUnitTest is Test {
 
     function testSuccessfullyCreateNewElection() public {
         uint256 eazyVoteElectionTotalBefore = eazyVote.getElections().length;
-        eazyVote.createNewElection(1, 2);
+        eazyVote.createNewElection("Fried Noodle vs Chicken Noodle", "food.jpg", 1, 2, "Lorem ipsum dolor");
         uint256 eazyVoteElectionTotalAfter = eazyVote.getElections().length;
         assertEq(eazyVoteElectionTotalBefore, 0);
         assertEq(eazyVoteElectionTotalAfter, 1);
