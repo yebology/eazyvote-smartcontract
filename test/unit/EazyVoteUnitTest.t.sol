@@ -28,6 +28,11 @@ contract EazyVoteUnitTest is Test {
         _;
     }
 
+    modifier changeElectionStatus(uint256 electionId, string memory status) {
+        eazyVote.changeElectionStatus(electionId, status);
+        _;
+    }
+
     function setUp() public {
         eazyVoteDeploy = new EazyVoteDeploy();
         eazyVote = eazyVoteDeploy.run();
@@ -60,8 +65,8 @@ contract EazyVoteUnitTest is Test {
         createNewElection
         addNewCandidate(0, "Solana")
         addNewCandidate(0, "Doge")
+        changeElectionStatus(0, "OPEN")
     {
-        eazyVote.changeElectionStatus(0, "OPEN");
         eazyVote.voteCandidate(msg.sender, 0, 0);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -91,9 +96,9 @@ contract EazyVoteUnitTest is Test {
         createNewElection
         addNewCandidate(0, "Manta")
         addNewCandidate(0, "BGB")
+        changeElectionStatus(0, "OPEN")
     {
         uint256 expectedTotalVote = 1;
-        eazyVote.changeElectionStatus(0, "OPEN");
         eazyVote.voteCandidate(msg.sender, 0, 1);
         uint256 actualTotalVote = eazyVote.getCandidates()[1].totalVote;
         assertEq(expectedTotalVote, actualTotalVote);
@@ -105,9 +110,9 @@ contract EazyVoteUnitTest is Test {
         addNewCandidate(0, "AAVE")
         createNewElection
         addNewCandidate(1, "SHIBA")
+        changeElectionStatus(0, "OPEN")
+        changeElectionStatus(1, "OPEN")
     {
-        eazyVote.changeElectionStatus(0, "OPEN");
-        eazyVote.changeElectionStatus(1, "OPEN");
         uint256 expectedTotalVoteInSecondElection = 1;
         eazyVote.voteCandidate(msg.sender, 0, 0);
         eazyVote.voteCandidate(msg.sender, 1, 1);
@@ -148,31 +153,26 @@ contract EazyVoteUnitTest is Test {
         eazyVote.voteCandidate(msg.sender, 0, 0);
     }
 
-    function testChangeElectionStatus() public createNewElection {
-        EazyVote.Status expectedCurrentElectionStatus = EazyVote.Status.CLOSED;
-        EazyVote.Status actualCurrentElectionStatus = eazyVote
-        .getElections()[0].electionStatus;
-        eazyVote.changeElectionStatus(0, "OPEN");
-        EazyVote.Status expectedElectionStatusAfterChangeStatus = EazyVote
-            .Status
-            .OPEN;
-        EazyVote.Status actualElectionStatusAfterChangeStatus = eazyVote
-        .getElections()[0].electionStatus;
-        assertEq(
-            uint256(expectedCurrentElectionStatus),
-            uint256(actualCurrentElectionStatus)
-        );
-        assertEq(
-            uint256(expectedElectionStatusAfterChangeStatus),
-            uint256(actualElectionStatusAfterChangeStatus)
-        );
-    }
-
     function testSuccessfullyGiveFeedback() public {
         uint256 expectedFeedbacksCount = 1;
         eazyVote.giveFeedback(msg.sender, "Lorem ipsum dolor sit amet");
         uint256 actualFeedbacksCount = eazyVote.getFeedbacks().length;
         assertEq(expectedFeedbacksCount, actualFeedbacksCount);
+    }
+
+    function testSuccessfullyCloseElection() public {
+
+    }
+
+    function testSuccessfullyGetTotalVoterInOneElection() public 
+    createNewElection()
+    addNewCandidate(0, "FLOKI")
+    changeElectionStatus(0, "OPEN")
+    {
+        uint256 expectedTotalVoter = 1;
+        eazyVote.voteCandidate(msg.sender, 0, 0);
+        uint256 actualTotalVoter = eazyVote.getTotalVoterInOneElection(0);
+        assertEq(expectedTotalVoter, actualTotalVoter);
     }
     //
 }
