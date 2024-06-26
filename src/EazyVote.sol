@@ -58,40 +58,40 @@ contract EazyVote {
         Status electionStatus
     );
 
-    modifier onlyVoteOneTimeInOneElection(address voter, uint256 electionId) {
-        uint256 length = electionVoter[electionId].length;
+    modifier onlyVoteOneTimeInOneElection(address _voter, uint256 _electionId) {
+        uint256 length = electionVoter[_electionId].length;
         for (uint256 i = 0; i < length; i++) {
-            if (electionVoter[electionId][i] == voter) {
-                revert VoterAlreadyVote(voter, electionId);
+            if (electionVoter[_electionId][i] == _voter) {
+                revert VoterAlreadyVote(_voter, _electionId);
             }
         }
         _;
     }
 
-    modifier electionMustStillOpen(uint256 electionId) {
-        if (elections[electionId].electionStatus == Status.CLOSED) {
-            revert ElectionIsNotOpen(electionId);
+    modifier electionMustStillOpen(uint256 _electionId) {
+        if (elections[_electionId].electionStatus == Status.CLOSED) {
+            revert ElectionIsNotOpen(_electionId);
         }
         _;
     }
 
     function createNewElection(
-        string memory electionTitle,
-        string memory electionPicture,
-        address electionCreator,
-        uint256 electionStart,
-        uint256 electionEnd,
-        string memory electionDescription
+        string memory _electionTitle,
+        string memory _electionPicture,
+        address _electionCreator,
+        uint256 _electionStart,
+        uint256 _electionEnd,
+        string memory _electionDescription
     ) external {
         elections.push(
             Election({
                 id: elections.length,
-                electionTitle: electionTitle,
-                electionPicture: electionPicture,
-                electionCreator: electionCreator,
-                electionStart: electionStart,
-                electionEnd: electionEnd,
-                electionDescription: electionDescription,
+                electionTitle: _electionTitle,
+                electionPicture: _electionPicture,
+                electionCreator: _electionCreator,
+                electionStart: _electionStart,
+                electionEnd: _electionEnd,
+                electionDescription: _electionDescription,
                 electionStatus: Status.CLOSED
             })
         );
@@ -99,67 +99,67 @@ contract EazyVote {
     }
 
     function changeElectionStatus(
-        uint256 electionId,
-        string memory message
+        uint256 _electionId,
+        string memory _message
     ) external {
         if (
-            keccak256(abi.encodePacked(message)) ==
+            keccak256(abi.encodePacked(_message)) ==
             keccak256(abi.encodePacked("OPEN"))
         ) {
-            elections[electionId].electionStatus = Status.OPEN;
+            elections[_electionId].electionStatus = Status.OPEN;
         } else if (
-            keccak256((abi.encodePacked(message))) ==
+            keccak256((abi.encodePacked(_message))) ==
             keccak256(abi.encodePacked("CLOSED"))
         ) {
-            elections[electionId].electionStatus = Status.CLOSED;
+            elections[_electionId].electionStatus = Status.CLOSED;
         }
         emit electionHasChangedStatus(
-            electionId,
-            elections[electionId].electionStatus
+            _electionId,
+            elections[_electionId].electionStatus
         );
     }
 
     function addNewCandidate(
-        uint256 electionId,
-        string memory candidateName,
-        string memory candidatePhoto,
-        string memory candidateVision,
-        string memory candidateMission
+        uint256 _electionId,
+        string memory _candidateName,
+        string memory _candidatePhoto,
+        string memory _candidateVision,
+        string memory _candidateMission
     ) external {
         candidates.push(
             Candidate({
                 id: candidates.length,
                 totalVote: 0,
-                candidateName: candidateName,
-                candidatePhoto: candidatePhoto,
-                candidateVision: candidateVision,
-                candidateMission: candidateMission
+                candidateName: _candidateName,
+                candidatePhoto: _candidatePhoto,
+                candidateVision: _candidateVision,
+                candidateMission: _candidateMission
             })
         );
-        electionCandidate[electionId].push(candidates.length - 1);
-        emit newCandidateHasBeenAdded(electionId, candidates.length - 1);
+        electionCandidate[_electionId].push(candidates.length - 1);
+        emit newCandidateHasBeenAdded(_electionId, candidates.length - 1);
     }
 
     function voteCandidate(
-        address voter,
-        uint256 electionId,
-        uint256 candidateId
+        address _voter,
+        uint256 _electionId,
+        uint256 _candidateId
     )
         external
-        electionMustStillOpen(electionId)
-        onlyVoteOneTimeInOneElection(voter, electionId)
+        electionMustStillOpen(_electionId)
+        onlyVoteOneTimeInOneElection(_voter, _electionId)
     {
-        electionVoter[electionId].push(voter);
-        candidates[candidateId].totalVote += 1;
-        emit newVoteHasBeenAdded(voter, electionId, candidateId);
+        electionVoter[_electionId].push(_voter);
+        candidates[_candidateId].totalVote += 1;
+        emit newVoteHasBeenAdded(_voter, _electionId, _candidateId);
     }
 
-    function giveFeedback(address user, string memory textFeedback) external {
+    function giveFeedback(address _user, string memory _textFeedback) external {
         feedbacks.push(
             Feedback({
                 id: feedbacks.length,
-                user: user,
-                textFeedback: textFeedback
+                user: _user,
+                textFeedback: _textFeedback
             })
         );
     }
@@ -177,15 +177,15 @@ contract EazyVote {
     }
 
     function getTotalVoterInOneElection(
-        uint256 electionId
+        uint256 _electionId
     ) external view returns (uint256) {
-        return electionVoter[electionId].length;
+        return electionVoter[_electionId].length;
     }
 
     function getCandidatesIdInOneElection(
-        uint256 electionId
+        uint256 _electionId
     ) external view returns (uint256[] memory) {
-        uint256[] memory candidateIds = electionCandidate[electionId];
+        uint256[] memory candidateIds = electionCandidate[_electionId];
         return candidateIds;
     }
     //

@@ -160,8 +160,10 @@ contract EazyVoteUnitTest is Test {
         assertEq(expectedFeedbacksCount, actualFeedbacksCount);
     }
 
-    function testSuccessfullyCloseElection() public {
-
+    function testSuccessfullyCloseElection() public createNewElection() changeElectionStatus(0, "OPEN") changeElectionStatus(0, "CLOSED"){
+        EazyVote.Status expectedElectionStatus = EazyVote.Status.CLOSED;
+        EazyVote.Status actualElectionStatus = eazyVote.getElections()[0].electionStatus;
+        assertEq(uint256(expectedElectionStatus), uint256(actualElectionStatus));
     }
 
     function testSuccessfullyGetTotalVoterInOneElection() public 
