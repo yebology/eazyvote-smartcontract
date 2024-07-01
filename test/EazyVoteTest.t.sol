@@ -3,8 +3,8 @@
 pragma solidity ^0.8.23;
 
 import {Test, console} from "forge-std/Test.sol";
-import {EazyVoteDeploy} from "../../script/EazyVoteDeploy.s.sol";
-import {EazyVote} from "../../src/EazyVote.sol";
+import {EazyVoteDeploy} from "../script/EazyVoteDeploy.s.sol";
+import {EazyVote} from "../src/EazyVote.sol";
 
 contract EazyVoteUnitTest is Test {
     //
@@ -175,6 +175,17 @@ contract EazyVoteUnitTest is Test {
         eazyVote.voteCandidate(msg.sender, 0, 0);
         uint256 actualTotalVoter = eazyVote.getTotalVoterInOneElection(0);
         assertEq(expectedTotalVoter, actualTotalVoter);
+    }
+
+    function testSuccessfullyGetHistory() public
+    createNewElection()
+    addNewCandidate(0, "MANTA")
+    changeElectionStatus(0, "OPEN")
+    {
+        uint256 expectedHistoryLength = 1;
+        eazyVote.voteCandidate(msg.sender, 0, 0);
+        uint256 actualHistoryLength = eazyVote.getHistoryId(msg.sender).length;
+        assertEq(expectedHistoryLength, actualHistoryLength);
     }
     //
 }

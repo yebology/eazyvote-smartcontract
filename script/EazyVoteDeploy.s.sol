@@ -9,7 +9,9 @@ contract EazyVoteDeploy is Script {
     event EazyVoteCreated(address eazyVote);
 
     function run() external returns (EazyVote) {
+        vm.startBroadcast();
         EazyVote eazyVote = new EazyVote();
+        vm.stopBroadcast();
         emit EazyVoteCreated((address(eazyVote)));
         return eazyVote;
     }

@@ -35,6 +35,7 @@ contract EazyVote {
 
     mapping(uint256 electionId => uint256[] candidateId) electionCandidate;
     mapping(uint256 electionId => address[] voter) electionVoter;
+    mapping(address voter => uint256[] electionId) history;
 
     Election[] private elections;
     Candidate[] private candidates;
@@ -150,6 +151,7 @@ contract EazyVote {
         onlyVoteOneTimeInOneElection(_voter, _electionId)
     {
         electionVoter[_electionId].push(_voter);
+        history[_voter].push(_electionId);
         candidates[_candidateId].totalVote += 1;
         emit newVoteHasBeenAdded(_voter, _electionId, _candidateId);
     }
@@ -187,6 +189,17 @@ contract EazyVote {
     ) external view returns (uint256[] memory) {
         uint256[] memory candidateIds = electionCandidate[_electionId];
         return candidateIds;
+    }
+
+    function getHistoryId(
+        address _user
+    ) external view returns (uint256[] memory) {
+        uint256 length = history[_user].length;
+        uint256[] memory allHistory = new uint256[](length);
+        for (uint256 i = 0; i < length; i++) {
+            allHistory[i] = history[_user][i];
+        }
+        return allHistory;
     }
     //
 }
