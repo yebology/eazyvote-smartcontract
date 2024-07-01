@@ -6,7 +6,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {EazyVoteDeploy} from "../script/EazyVoteDeploy.s.sol";
 import {EazyVote} from "../src/EazyVote.sol";
 
-contract EazyVoteUnitTest is Test {
+contract EazyVoteTest is Test {
     //
     EazyVoteDeploy eazyVoteDeploy;
     EazyVote eazyVote;

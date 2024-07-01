@@ -12,6 +12,7 @@ contract EazyVoteDeploy is Script {
         vm.startBroadcast();
         EazyVote eazyVote = new EazyVote();
         vm.stopBroadcast();
+
         emit EazyVoteCreated((address(eazyVote)));
         return eazyVote;
     }
