@@ -99,25 +99,27 @@ contract EazyVote {
         emit newElectionHasBeenCreated(elections.length - 1);
     }
 
-    function changeElectionStatus(
-        uint256 _electionId,
-        string memory _message
-    ) external {
-        if (
-            keccak256(abi.encodePacked(_message)) ==
-            keccak256(abi.encodePacked("OPEN"))
-        ) {
-            elections[_electionId].electionStatus = Status.OPEN;
-        } else if (
-            keccak256((abi.encodePacked(_message))) ==
-            keccak256(abi.encodePacked("CLOSED"))
-        ) {
-            elections[_electionId].electionStatus = Status.CLOSED;
+    function checkAndChangeElectionStatus() external {
+        uint256 length = elections.length;
+        for (uint256 i = 0; i < length; i++) {
+            Status newStatus = elections[i].electionStatus;
+            if (
+                block.timestamp >= elections[i].electionEnd &&
+                elections[i].electionStatus != Status.CLOSED
+            ) {
+                newStatus = Status.CLOSED;
+            } else if (
+                block.timestamp >= elections[i].electionStart &&
+                block.timestamp <= elections[i].electionEnd &&
+                elections[i].electionStatus != Status.OPEN
+            ) {
+                newStatus = Status.OPEN;
+            }
+            if (newStatus != elections[i].electionStatus) {
+                elections[i].electionStatus = newStatus;
+                emit electionHasChangedStatus(i, elections[i].electionStatus);
+            }
         }
-        emit electionHasChangedStatus(
-            _electionId,
-            elections[_electionId].electionStatus
-        );
     }
 
     function addNewCandidate(

@@ -12,8 +12,22 @@ contract EazyVoteTest is Test {
     EazyVote eazyVote;
 
     modifier createNewElection() {
-        eazyVote.createNewElection("Coin Selection", "coin.jpg", msg.sender, 1, 4, "Lorem ipsum dolor sit amet");
-        eazyVote.createNewElection("Organization Voting", "organization.jpg", msg.sender, 2, 5, "Lorem ipsum dolor sit amet");
+        eazyVote.createNewElection(
+            "Coin Selection",
+            "coin.jpg",
+            msg.sender,
+            block.timestamp,
+            block.timestamp + 1 hours,
+            "Lorem ipsum dolor sit amet"
+        );
+        eazyVote.createNewElection(
+            "Best Crypto Community",
+            "coin.jpg",
+            msg.sender,
+            block.timestamp + 1 hours,
+            block.timestamp + 2 hours,
+            "Lorem ipsum dolor sit amet"
+        );
         _;
     }
 
@@ -28,8 +42,8 @@ contract EazyVoteTest is Test {
         _;
     }
 
-    modifier changeElectionStatus(uint256 electionId, string memory status) {
-        eazyVote.changeElectionStatus(electionId, status);
+    modifier checkAndChangeElectionStatus() {
+        eazyVote.checkAndChangeElectionStatus();
         _;
     }
 
@@ -40,9 +54,16 @@ contract EazyVoteTest is Test {
 
     function testSuccessfullyCreateNewElection() public {
         uint256 eazyVoteElectionTotalBefore = eazyVote.getElections().length;
-        eazyVote.createNewElection("Fried Noodle vs Chicken Noodle", "food.jpg", msg.sender, 1, 2, "Lorem ipsum dolor");
+        eazyVote.createNewElection(
+            "Fried Noodle vs Chicken Noodle",
+            "food.jpg",
+            msg.sender,
+            block.timestamp + 1 hours,
+            block.timestamp + 3 hours,
+            "Lorem ipsum dolor"
+        );
         uint256 eazyVoteElectionTotalAfter = eazyVote.getElections().length;
-        assertEq(eazyVoteElectionTotalBefore, 0);
+        assertEq(eazyVoteElectionTotalBefore, 0); //
         assertEq(eazyVoteElectionTotalAfter, 1);
     }
 
@@ -65,7 +86,7 @@ contract EazyVoteTest is Test {
         createNewElection
         addNewCandidate(0, "Solana")
         addNewCandidate(0, "Doge")
-        changeElectionStatus(0, "OPEN")
+        checkAndChangeElectionStatus
     {
         eazyVote.voteCandidate(msg.sender, 0, 0);
         vm.expectRevert(
@@ -96,32 +117,12 @@ contract EazyVoteTest is Test {
         createNewElection
         addNewCandidate(0, "Manta")
         addNewCandidate(0, "BGB")
-        changeElectionStatus(0, "OPEN")
+        checkAndChangeElectionStatus
     {
         uint256 expectedTotalVote = 1;
         eazyVote.voteCandidate(msg.sender, 0, 1);
         uint256 actualTotalVote = eazyVote.getCandidates()[1].totalVote;
         assertEq(expectedTotalVote, actualTotalVote);
-    }
-
-    function testSuccessfullyVoteCandidateOnAnotherElection()
-        public
-        createNewElection
-        addNewCandidate(0, "AAVE")
-        createNewElection
-        addNewCandidate(1, "SHIBA")
-        changeElectionStatus(0, "OPEN")
-        changeElectionStatus(1, "OPEN")
-    {
-        uint256 expectedTotalVoteInSecondElection = 1;
-        eazyVote.voteCandidate(msg.sender, 0, 0);
-        eazyVote.voteCandidate(msg.sender, 1, 1);
-        uint256 actualTotalVoteInSecondElection = eazyVote
-        .getCandidates()[1].totalVote;
-        assertEq(
-            expectedTotalVoteInSecondElection,
-            actualTotalVoteInSecondElection
-        );
     }
 
     function testSuccessfullyReturnCandidatesIdInOneElection()
@@ -160,16 +161,25 @@ contract EazyVoteTest is Test {
         assertEq(expectedFeedbacksCount, actualFeedbacksCount);
     }
 
-    function testSuccessfullyCloseElection() public createNewElection() changeElectionStatus(0, "OPEN") changeElectionStatus(0, "CLOSED"){
+    function testSuccessfullyCloseElection()
+        public
+        createNewElection
+        checkAndChangeElectionStatus
+    {
         EazyVote.Status expectedElectionStatus = EazyVote.Status.CLOSED;
-        EazyVote.Status actualElectionStatus = eazyVote.getElections()[0].electionStatus;
-        assertEq(uint256(expectedElectionStatus), uint256(actualElectionStatus));
+        EazyVote.Status actualElectionStatus = eazyVote
+        .getElections()[1].electionStatus;
+        assertEq(
+            uint256(expectedElectionStatus),
+            uint256(actualElectionStatus)
+        );
     }
 
-    function testSuccessfullyGetTotalVoterInOneElection() public 
-    createNewElection()
-    addNewCandidate(0, "FLOKI")
-    changeElectionStatus(0, "OPEN")
+    function testSuccessfullyGetTotalVoterInOneElection()
+        public
+        createNewElection
+        addNewCandidate(0, "FLOKI")
+        checkAndChangeElectionStatus
     {
         uint256 expectedTotalVoter = 1;
         eazyVote.voteCandidate(msg.sender, 0, 0);
@@ -177,10 +187,11 @@ contract EazyVoteTest is Test {
         assertEq(expectedTotalVoter, actualTotalVoter);
     }
 
-    function testSuccessfullyGetHistory() public
-    createNewElection()
-    addNewCandidate(0, "MANTA")
-    changeElectionStatus(0, "OPEN")
+    function testSuccessfullyGetHistory()
+        public
+        createNewElection
+        addNewCandidate(0, "MANTA")
+        checkAndChangeElectionStatus
     {
         uint256 expectedHistoryLength = 1;
         eazyVote.voteCandidate(msg.sender, 0, 0);
