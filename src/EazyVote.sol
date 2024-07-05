@@ -41,7 +41,6 @@ contract EazyVote {
     Candidate[] private candidates;
     Feedback[] private feedbacks;
 
-    error ElectionIsNotOpen(uint256 electionId);
     error VoterAlreadyVote(address voter, uint256 electionId);
 
     event newElectionHasBeenCreated(uint256 indexed electionId);
@@ -69,21 +68,25 @@ contract EazyVote {
         _;
     }
 
-    modifier electionMustStillOpen(uint256 _electionId) {
-        if (elections[_electionId].electionStatus == Status.CLOSED) {
-            revert ElectionIsNotOpen(_electionId);
-        }
-        _;
-    }
-
     function createNewElection(
         string memory _electionTitle,
         string memory _electionPicture,
         address _electionCreator,
         uint256 _electionStart,
         uint256 _electionEnd,
-        string memory _electionDescription
+        string memory _electionDescription,
+        string[] memory _candidateNames,
+        string[] memory _candidatePhotos,
+        string[] memory _candidateVisions,
+        string[] memory _candidateMissions
     ) external {
+        require(
+            _candidateNames.length == _candidatePhotos.length &&
+                _candidatePhotos.length == _candidateVisions.length &&
+                _candidateVisions.length == _candidateMissions.length,
+              "Candidate array must have the same length!"
+        );
+
         elections.push(
             Election({
                 id: elections.length,
@@ -96,6 +99,16 @@ contract EazyVote {
                 electionStatus: Status.CLOSED
             })
         );
+        uint256 length = _candidateNames.length;
+        for (uint256 i = 0; i < length; i++) {
+            addNewCandidate(
+                elections.length - 1,
+                _candidateNames[i],
+                _candidatePhotos[i],
+                _candidateVisions[i],
+                _candidateMissions[i]
+            );
+        }
         emit newElectionHasBeenCreated(elections.length - 1);
     }
 
@@ -128,7 +141,7 @@ contract EazyVote {
         string memory _candidatePhoto,
         string memory _candidateVision,
         string memory _candidateMission
-    ) external {
+    ) private {
         candidates.push(
             Candidate({
                 id: candidates.length,
@@ -149,9 +162,9 @@ contract EazyVote {
         uint256 _candidateId
     )
         external
-        electionMustStillOpen(_electionId)
         onlyVoteOneTimeInOneElection(_voter, _electionId)
     {
+        require(elections[_electionId].electionStatus == Status.OPEN, "Election is not open yet!");
         electionVoter[_electionId].push(_voter);
         history[_voter].push(_electionId);
         candidates[_candidateId].totalVote += 1;
