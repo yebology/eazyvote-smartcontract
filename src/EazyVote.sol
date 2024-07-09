@@ -57,6 +57,11 @@ contract EazyVote {
         uint256 indexed electionId,
         Status electionStatus
     );
+    event newFeedbackHasBeenAdded(
+        uint256 indexed id,
+        address indexed user,
+        string textFeedback
+    );
 
     modifier onlyVoteOneTimeInOneElection(address _voter, uint256 _electionId) {
         uint256 length = electionVoter[_electionId].length;
@@ -71,7 +76,6 @@ contract EazyVote {
     function createNewElection(
         string memory _electionTitle,
         string memory _electionPicture,
-        address _electionCreator,
         uint256 _electionStart,
         uint256 _electionEnd,
         string memory _electionDescription,
@@ -84,7 +88,7 @@ contract EazyVote {
             _candidateNames.length == _candidatePhotos.length &&
                 _candidatePhotos.length == _candidateVisions.length &&
                 _candidateVisions.length == _candidateMissions.length,
-              "Candidate array must have the same length!"
+            "Candidate array must have the same length!"
         );
 
         elections.push(
@@ -92,7 +96,7 @@ contract EazyVote {
                 id: elections.length,
                 electionTitle: _electionTitle,
                 electionPicture: _electionPicture,
-                electionCreator: _electionCreator,
+                electionCreator: msg.sender,
                 electionStart: _electionStart,
                 electionEnd: _electionEnd,
                 electionDescription: _electionDescription,
@@ -123,7 +127,7 @@ contract EazyVote {
                 newStatus = Status.CLOSED;
             } else if (
                 block.timestamp >= elections[i].electionStart &&
-                block.timestamp <= elections[i].electionEnd &&
+                block.timestamp < elections[i].electionEnd &&
                 elections[i].electionStatus != Status.OPEN
             ) {
                 newStatus = Status.OPEN;
@@ -157,28 +161,28 @@ contract EazyVote {
     }
 
     function voteCandidate(
-        address _voter,
         uint256 _electionId,
         uint256 _candidateId
-    )
-        external
-        onlyVoteOneTimeInOneElection(_voter, _electionId)
-    {
-        require(elections[_electionId].electionStatus == Status.OPEN, "Election is not open yet!");
-        electionVoter[_electionId].push(_voter);
-        history[_voter].push(_electionId);
+    ) external onlyVoteOneTimeInOneElection(msg.sender, _electionId) {
+        require(
+            elections[_electionId].electionStatus == Status.OPEN,
+            "Election is not open yet!"
+        );
+        electionVoter[_electionId].push(msg.sender);
+        history[msg.sender].push(_electionId);
         candidates[_candidateId].totalVote += 1;
-        emit newVoteHasBeenAdded(_voter, _electionId, _candidateId);
+        emit newVoteHasBeenAdded(msg.sender, _electionId, _candidateId);
     }
 
-    function giveFeedback(address _user, string memory _textFeedback) external {
+    function giveFeedback(string memory _textFeedback) external {
         feedbacks.push(
             Feedback({
                 id: feedbacks.length,
-                user: _user,
+                user: msg.sender,
                 textFeedback: _textFeedback
             })
         );
+        emit newFeedbackHasBeenAdded(feedbacks.length, msg.sender, _textFeedback);
     }
 
     function getElections() external view returns (Election[] memory) {
@@ -206,13 +210,11 @@ contract EazyVote {
         return candidateIds;
     }
 
-    function getHistoryId(
-        address _user
-    ) external view returns (uint256[] memory) {
-        uint256 length = history[_user].length;
+    function getHistoryId() external view returns (uint256[] memory) {
+        uint256 length = history[msg.sender].length;
         uint256[] memory allHistory = new uint256[](length);
         for (uint256 i = 0; i < length; i++) {
-            allHistory[i] = history[_user][i];
+            allHistory[i] = history[msg.sender][i];
         }
         return allHistory;
     }
