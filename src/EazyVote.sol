@@ -210,11 +210,11 @@ contract EazyVote {
         return candidateIds;
     }
 
-    function getHistoryId() external view returns (uint256[] memory) {
-        uint256 length = history[msg.sender].length;
+    function getHistoryId(address _user) external view returns (uint256[] memory) {
+        uint256 length = history[_user].length;
         uint256[] memory allHistory = new uint256[](length);
         for (uint256 i = 0; i < length; i++) {
-            allHistory[i] = history[msg.sender][i];
+            allHistory[i] = history[_user][i];
         }
         return allHistory;
     }

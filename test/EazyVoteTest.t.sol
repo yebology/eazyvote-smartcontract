@@ -198,9 +198,12 @@ contract EazyVoteTest is Test {
         checkAndChangeElectionStatus
     {
         uint256 expectedHistoryLength = 1;
+        address user = msg.sender;
+        vm.startPrank(user);
         eazyVote.voteCandidate(0, 0);
-        uint256 actualHistoryLength = eazyVote.getHistoryId().length;
+        uint256 actualHistoryLength = eazyVote.getHistoryId(user).length;
         assertEq(expectedHistoryLength, actualHistoryLength);
+        vm.stopPrank();
     }
     //
 }
