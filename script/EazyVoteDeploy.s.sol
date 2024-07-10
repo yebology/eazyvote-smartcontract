@@ -4,6 +4,7 @@ pragma solidity ^0.8.23;
 import {Script} from "forge-std/Script.sol";
 import {EazyVote} from "../src/EazyVote.sol";
 
+// done all
 contract EazyVoteDeploy is Script {
     //
     event EazyVoteCreated(address eazyVote);
